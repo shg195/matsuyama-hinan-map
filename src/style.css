@@ -64,3 +64,36 @@ body {
   gap: 6px;
   cursor: pointer;
 }
+
+/* 起点設定（住所検索＋現在地）。最小UI・意匠はモジュール9で置換。 */
+.location-control {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  gap: 6px;
+}
+
+.location-control form {
+  display: flex;
+  gap: 4px;
+}
+
+.location-control input {
+  padding: 6px 8px;
+  border: 1px solid #999;
+  border-radius: 6px;
+  font: 13px sans-serif;
+}
+
+.location-control button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: #1565c0;
+  color: #fff;
+  font: 13px sans-serif;
+  cursor: pointer;
+}
