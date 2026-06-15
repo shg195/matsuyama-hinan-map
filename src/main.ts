@@ -8,7 +8,9 @@ import './style.css';
 import { initMap, addSiteLayer, SITE_LAYER_ID } from './map';
 import { loadSites } from './sites';
 import { buildSiteFilter } from './filter';
+import { initHazardLayers, setHazardVisibility } from './hazard';
 import { createFilterPanel } from './ui/filter-panel';
+import { createHazardPanel } from './ui/hazard-panel';
 
 const container = document.querySelector<HTMLDivElement>('#app');
 if (!container) {
@@ -20,11 +22,18 @@ const map = initMap(container);
 map.on('load', () => {
   loadSites()
     .then((sites) => {
+      // ハザード（初期非表示）を先に追加し、その上に避難場所ピンを重ねる。
+      initHazardLayers(map);
       addSiteLayer(map, sites);
       // レイヤ生成後にフィルタUIを配置（setFilter はレイヤ存在が前提）。
       createFilterPanel(document.body, {
         onChange: (selected) => {
           map.setFilter(SITE_LAYER_ID, buildSiteFilter(selected));
+        },
+      });
+      createHazardPanel(document.body, {
+        onToggle: (id, visible) => {
+          setHazardVisibility(map, id, visible);
         },
       });
     })

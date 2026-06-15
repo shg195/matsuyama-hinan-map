@@ -37,3 +37,30 @@ body {
   background: #1565c0;
   color: #fff;
 }
+
+/* ハザード重ね（最小UI。意匠はモジュール9で置換）。 */
+.hazard-panel {
+  position: fixed;
+  bottom: 24px;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  font: 13px sans-serif;
+  color: #333;
+}
+
+.hazard-panel__title {
+  font-weight: bold;
+}
+
+.hazard-panel__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
