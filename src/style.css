@@ -1,0 +1,12 @@
+/* レイアウト最小定義。配色・意匠の本格化はモジュール9（claude design 成果物）で行う。 */
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+/* 地図コンテナを全画面に。MapLibre は明示的な高さが必要。 */
+#app {
+  position: fixed;
+  inset: 0;
+}
