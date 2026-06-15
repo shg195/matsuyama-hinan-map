@@ -17,6 +17,8 @@ export const SITE_SOURCE_ID = 'sites';
 export function initMap(container: HTMLElement): maplibregl.Map {
   const map = new maplibregl.Map({
     container,
+    // 既定の出典コントロールは無効化し、常時表示（compact:false）のものを自分で足す。
+    attributionControl: false,
     style: {
       version: 8,
       sources: {
@@ -24,8 +26,9 @@ export function initMap(container: HTMLElement): maplibregl.Map {
           type: 'raster',
           tiles: [GSI_STD_TILES],
           tileSize: 256,
+          // 下地タイル・標高・住所検索はいずれも国土地理院（地理院タイル/コンテンツ利用規約）。
           attribution:
-            '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>',
+            '地図・検索：<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>',
         },
       },
       layers: [{ id: 'gsi-base', type: 'raster', source: 'gsi' }],
@@ -34,6 +37,8 @@ export function initMap(container: HTMLElement): maplibregl.Map {
     zoom: 12,
   });
   map.addControl(new maplibregl.NavigationControl(), 'top-right');
+  // 出典を常設表示（spec §6.1・ライセンス順守）。
+  map.addControl(new maplibregl.AttributionControl({ compact: false }), 'bottom-right');
   return map;
 }
 
@@ -43,6 +48,9 @@ export function addSiteLayer(map: maplibregl.Map, data: SiteFeatureCollection): 
   map.addSource(SITE_SOURCE_ID, {
     type: 'geojson',
     data: data as unknown as FeatureCollection,
+    // 避難場所データの出典（松山市オープンデータ・CC BY）。
+    attribution:
+      '避難場所：<a href="https://www.city.matsuyama.ehime.jp/shisei/opendata/metadata/hinanbasho.html" target="_blank" rel="noopener">松山市オープンデータ（CC BY）</a>',
   });
   map.addLayer({
     id: SITE_LAYER_ID,
