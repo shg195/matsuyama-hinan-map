@@ -26,6 +26,11 @@ if (!container) {
 
 const map = initMap(container);
 
+// 上部コントロール帯（検索・フィルタ・ハザードを縦積みにして重なりを防ぐ）。
+const topControls = document.createElement('div');
+topControls.className = 'controls-top';
+document.body.appendChild(topControls);
+
 // --- アプリ状態 ---
 let allSites: SiteFeatureCollection | null = null;
 const siteById = new Map<string, SiteFeature>();
@@ -42,7 +47,7 @@ const nearestList: NearestListController = createNearestList(document.body, {
 });
 
 // 起点設定UI（住所検索・現在地）。地図読込を待たず使える。
-createLocationControl(document.body, {
+createLocationControl(topControls, {
   onSearch: (query) => {
     geocode(query)
       .then((origin) => {
@@ -81,14 +86,14 @@ map.on('load', () => {
       initHazardLayers(map);
       addSiteLayer(map, sites);
 
-      createFilterPanel(document.body, {
+      createFilterPanel(topControls, {
         onChange: (selected) => {
           currentSelected = selected;
           map.setFilter(SITE_LAYER_ID, buildSiteFilter(selected));
           recomputeNearest();
         },
       });
-      createHazardPanel(document.body, {
+      createHazardPanel(topControls, {
         onToggle: (id, visible) => {
           setHazardVisibility(map, id, visible);
         },

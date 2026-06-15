@@ -36,9 +36,10 @@ export function initMap(container: HTMLElement): maplibregl.Map {
     center: MATSUYAMA_CENTER,
     zoom: 12,
   });
-  map.addControl(new maplibregl.NavigationControl(), 'top-right');
-  // 出典を常設表示（spec §6.1・ライセンス順守）。
-  map.addControl(new maplibregl.AttributionControl({ compact: false }), 'bottom-right');
+  // 上部はコントロール帯（.controls-top）が占めるため、ズームは右下へ。
+  map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+  // 出典を常設表示（spec §6.1・ライセンス順守）。狭い画面では自動で折りたたみ（ⓘ）表示になる。
+  map.addControl(new maplibregl.AttributionControl(), 'bottom-right');
   return map;
 }
 

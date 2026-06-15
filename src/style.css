@@ -1,4 +1,4 @@
-/* レイアウト最小定義。配色・意匠の本格化はモジュール9（claude design 成果物）で行う。 */
+/* レイアウト定義。配色は現状維持し、スマホでの操作パネルの重なり解消を主眼に整える（モジュール9-軽）。 */
 html,
 body {
   margin: 0;
@@ -11,23 +11,76 @@ body {
   inset: 0;
 }
 
-/* 災害種別フィルタ（最小UI。意匠はモジュール9で置換）。 */
-.filter-panel {
+/* 上部コントロール帯：検索→フィルタ→ハザードを縦に積む（重なり解消）。
+   帯の余白は pointer-events:none で地図操作を通す。 */
+.controls-top {
   position: fixed;
-  top: 8px;
-  left: 8px;
-  z-index: 5;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 6px;
-  max-width: calc(100% - 16px);
+  padding: 8px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.controls-top > * {
+  pointer-events: auto;
+}
+
+/* 起点設定（住所検索＋現在地）。 */
+.location-control {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.location-control form {
+  display: flex;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.location-control input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #999;
+  border-radius: 6px;
+  font: 14px sans-serif;
+}
+
+.location-control button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #1565c0;
+  color: #fff;
+  font: 13px sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 災害種別フィルタ：横スクロールのチップ列（縦に伸ばさない）。 */
+.filter-panel {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .filter-panel button {
+  flex: 0 0 auto;
+  white-space: nowrap;
   padding: 6px 12px;
   border: 1px solid #1565c0;
   border-radius: 16px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
   color: #1565c0;
   font: 13px sans-serif;
   cursor: pointer;
@@ -38,16 +91,14 @@ body {
   color: #fff;
 }
 
-/* ハザード重ね（最小UI。意匠はモジュール9で置換）。 */
+/* ハザード重ね：横並び（チェックボックス）。 */
 .hazard-panel {
-  position: fixed;
-  bottom: 24px;
-  left: 8px;
-  z-index: 5;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px 10px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 8px;
   font: 13px sans-serif;
@@ -56,58 +107,24 @@ body {
 
 .hazard-panel__title {
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .hazard-panel__item {
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-/* 起点設定（住所検索＋現在地）。最小UI・意匠はモジュール9で置換。 */
-.location-control {
-  position: fixed;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 6;
-  display: flex;
-  gap: 6px;
-}
-
-.location-control form {
-  display: flex;
-  gap: 4px;
-}
-
-.location-control input {
-  padding: 6px 8px;
-  border: 1px solid #999;
-  border-radius: 6px;
-  font: 13px sans-serif;
-}
-
-.location-control button {
-  padding: 6px 10px;
-  border: none;
-  border-radius: 6px;
-  background: #1565c0;
-  color: #fff;
-  font: 13px sans-serif;
-  cursor: pointer;
-}
-
-/* 最寄りリスト（最小UI・意匠はモジュール9で置換）。 */
+/* 最寄りリスト：左下に折りたたみ可能（native details）。 */
 .nearest-list {
   position: fixed;
-  top: 48px;
-  right: 8px;
+  bottom: 8px;
+  left: 8px;
   z-index: 5;
-  width: 240px;
-  max-height: 45vh;
-  overflow-y: auto;
-  padding: 8px 10px;
+  width: min(240px, calc(100% - 16px));
   background: rgba(255, 255, 255, 0.94);
   border-radius: 8px;
   font: 13px sans-serif;
@@ -115,14 +132,22 @@ body {
 }
 
 .nearest-list__heading {
+  list-style: none;
+  cursor: pointer;
   font-weight: bold;
-  margin-bottom: 4px;
+  padding: 8px 10px;
+}
+
+.nearest-list__heading::-webkit-details-marker {
+  display: none;
 }
 
 .nearest-list ul {
   margin: 0;
-  padding: 0;
+  padding: 0 10px 8px;
   list-style: none;
+  max-height: 35vh;
+  overflow-y: auto;
 }
 
 .nearest-list__item {
@@ -140,9 +165,10 @@ body {
 
 .nearest-list__hint {
   color: #666;
+  padding: 4px;
 }
 
-/* 詳細パネル（最小UI・意匠はモジュール9で置換）。 */
+/* 詳細パネル：下部シート（最寄りより前面）。 */
 .detail-panel {
   position: fixed;
   left: 8px;

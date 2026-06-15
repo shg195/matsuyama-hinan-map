@@ -23,11 +23,13 @@ export function createNearestList(
 ): NearestListController {
   const count = options.count ?? 10;
 
-  const panel = document.createElement('div');
+  // スマホでの占有を抑えるため折りたたみUI（native details）にする。
+  const panel = document.createElement('details');
   panel.className = 'nearest-list';
+  panel.open = true;
   panel.setAttribute('aria-label', '最寄りの避難場所');
 
-  const heading = document.createElement('div');
+  const heading = document.createElement('summary');
   heading.className = 'nearest-list__heading';
   heading.textContent = '最寄りの避難場所';
   panel.appendChild(heading);
