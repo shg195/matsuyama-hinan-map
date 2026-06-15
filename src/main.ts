@@ -5,8 +5,10 @@
  */
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
-import { initMap, addSiteLayer } from './map';
+import { initMap, addSiteLayer, SITE_LAYER_ID } from './map';
 import { loadSites } from './sites';
+import { buildSiteFilter } from './filter';
+import { createFilterPanel } from './ui/filter-panel';
 
 const container = document.querySelector<HTMLDivElement>('#app');
 if (!container) {
@@ -17,7 +19,15 @@ const map = initMap(container);
 
 map.on('load', () => {
   loadSites()
-    .then((sites) => addSiteLayer(map, sites))
+    .then((sites) => {
+      addSiteLayer(map, sites);
+      // レイヤ生成後にフィルタUIを配置（setFilter はレイヤ存在が前提）。
+      createFilterPanel(document.body, {
+        onChange: (selected) => {
+          map.setFilter(SITE_LAYER_ID, buildSiteFilter(selected));
+        },
+      });
+    })
     .catch((err: unknown) => {
       console.error(err);
       showError('避難場所データを読み込めませんでした。時間をおいて再読み込みしてください。');

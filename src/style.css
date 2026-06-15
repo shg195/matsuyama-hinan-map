@@ -10,3 +10,30 @@ body {
   position: fixed;
   inset: 0;
 }
+
+/* 災害種別フィルタ（最小UI。意匠はモジュール9で置換）。 */
+.filter-panel {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100% - 16px);
+}
+
+.filter-panel button {
+  padding: 6px 12px;
+  border: 1px solid #1565c0;
+  border-radius: 16px;
+  background: #fff;
+  color: #1565c0;
+  font: 13px sans-serif;
+  cursor: pointer;
+}
+
+.filter-panel button.is-active {
+  background: #1565c0;
+  color: #fff;
+}
