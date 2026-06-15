@@ -1,12 +1,12 @@
 /**
  * エントリポイント（src/main.ts）。
- * 地図を初期化し、避難場所 GeoJSON を読み込んでピン表示する（モジュール3）。
- * フィルタ・ハザード・詳細などは後続モジュールで追加する。
+ * 地図・避難場所ピン・災害種別フィルタ・ハザード重ね・起点設定・最寄りリスト・詳細を統合する。
+ * UI の意匠はモジュール9（claude design 成果物）で置換する。
  */
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
-import type { Origin } from './types';
+import type { DisasterType, Origin, SiteFeature, SiteFeatureCollection } from './types';
 import { initMap, addSiteLayer, SITE_LAYER_ID } from './map';
 import { loadSites } from './sites';
 import { buildSiteFilter } from './filter';
@@ -16,6 +16,8 @@ import { getCurrentLocation } from './geolocate';
 import { createFilterPanel } from './ui/filter-panel';
 import { createHazardPanel } from './ui/hazard-panel';
 import { createLocationControl } from './ui/location-control';
+import { createNearestList, type NearestListController } from './ui/nearest-list';
+import { showSiteDetail } from './ui/detail-panel';
 
 const container = document.querySelector<HTMLDivElement>('#app');
 if (!container) {
@@ -24,19 +26,22 @@ if (!container) {
 
 const map = initMap(container);
 
-// 起点（現在地 or 検索地点）のマーカー。1つを使い回す。
+// --- アプリ状態 ---
+let allSites: SiteFeatureCollection | null = null;
+const siteById = new Map<string, SiteFeature>();
+let currentOrigin: Origin | null = null;
+let currentSelected: ReadonlySet<DisasterType> = new Set();
 let originMarker: maplibregl.Marker | null = null;
 
-/** 起点を設定し、マーカー表示＋その地点へ地図を移動する。 */
-function setOrigin(origin: Origin): void {
-  if (!originMarker) {
-    originMarker = new maplibregl.Marker({ color: '#d32f2f' });
-  }
-  originMarker.setLngLat([origin.lng, origin.lat]).addTo(map);
-  map.flyTo({ center: [origin.lng, origin.lat], zoom: 14 });
-}
+// 最寄りリスト（地図読込を待たず生成。中身は update で反映）。
+const nearestList: NearestListController = createNearestList(document.body, {
+  onSelect: (site) => {
+    flyToSite(site);
+    showSiteDetail(document.body, site);
+  },
+});
 
-// 起点設定UI（地図の読込を待たずに使える）。
+// 起点設定UI（住所検索・現在地）。地図読込を待たず使える。
 createLocationControl(document.body, {
   onSearch: (query) => {
     geocode(query)
@@ -67,13 +72,20 @@ createLocationControl(document.body, {
 map.on('load', () => {
   loadSites()
     .then((sites) => {
+      allSites = sites;
+      for (const feature of sites.features) {
+        siteById.set(feature.properties.id, feature);
+      }
+
       // ハザード（初期非表示）を先に追加し、その上に避難場所ピンを重ねる。
       initHazardLayers(map);
       addSiteLayer(map, sites);
-      // レイヤ生成後にフィルタUIを配置（setFilter はレイヤ存在が前提）。
+
       createFilterPanel(document.body, {
         onChange: (selected) => {
+          currentSelected = selected;
           map.setFilter(SITE_LAYER_ID, buildSiteFilter(selected));
+          recomputeNearest();
         },
       });
       createHazardPanel(document.body, {
@@ -81,12 +93,62 @@ map.on('load', () => {
           setHazardVisibility(map, id, visible);
         },
       });
+
+      // ピンのクリックで詳細表示（properties.id から正規データを引く）。
+      map.on('click', SITE_LAYER_ID, (e) => {
+        const id = e.features?.[0]?.properties?.id;
+        if (typeof id !== 'string') {
+          return;
+        }
+        const site = siteById.get(id);
+        if (site) {
+          showSiteDetail(document.body, site);
+        }
+      });
+      map.on('mouseenter', SITE_LAYER_ID, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', SITE_LAYER_ID, () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      recomputeNearest();
     })
     .catch((err: unknown) => {
       console.error(err);
       showError('避難場所データを読み込めませんでした。時間をおいて再読み込みしてください。');
     });
 });
+
+/** 起点を設定し、マーカー表示＋移動＋最寄り再計算する。 */
+function setOrigin(origin: Origin): void {
+  currentOrigin = origin;
+  if (!originMarker) {
+    originMarker = new maplibregl.Marker({ color: '#d32f2f' });
+  }
+  originMarker.setLngLat([origin.lng, origin.lat]).addTo(map);
+  map.flyTo({ center: [origin.lng, origin.lat], zoom: 14 });
+  recomputeNearest();
+}
+
+/** 指定避難場所へ地図を寄せる。 */
+function flyToSite(site: SiteFeature): void {
+  map.flyTo({ center: site.geometry.coordinates, zoom: 16 });
+}
+
+/** 現在のフィルタ選択を反映した避難場所群で最寄りリストを更新する。 */
+function recomputeNearest(): void {
+  if (!allSites) {
+    return;
+  }
+  const target =
+    currentSelected.size === 0
+      ? allSites.features
+      : allSites.features.filter((f) =>
+          f.properties.disasterTypes.some((t) => currentSelected.has(t)),
+        );
+  nearestList.update(currentOrigin, target);
+}
 
 /** 最小のエラー表示。本格的な UI はモジュール9（claude design 成果物）で置換する。 */
 function showError(message: string): void {
